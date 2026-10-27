@@ -1,0 +1,32 @@
+name: Génération APK 6milles
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@v3
+
+      - name: Configuration de Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Installation de PWABuilder CLI
+        run: npm install -g @pwabuilder/cli
+
+      - name: Génération de l'APK Android
+        run: pwabuilder package -u "https://localhost" -p android -o ./output
+
+      - name: Téléversement de l'APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: 6milles-APK
+          path: output/
