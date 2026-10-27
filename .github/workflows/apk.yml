@@ -29,7 +29,7 @@ jobs:
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "6milles" "com.manu.milles6" --web-dir .
-          npx cap add android --no-confirm
+          yes | npx cap add android || true
           npx cap copy android
 
       - name: Compilation de l'APK Android
