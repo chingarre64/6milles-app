@@ -20,12 +20,9 @@ jobs:
         with:
           node-version: 20
 
-      - name: Installation de PWABuilder CLI
-        run: npm install -g @pwabuilder/cli
-
       - name: Génération du package Android
         run: |
-          pwabuilder package -u "https://chingarre64.github.io/6milles-app/" -p android -o ./output
+          npx @pwabuilder/cli package -u "https://chingarre64.github.io/6milles-app/" -p android -o ./output
 
       - name: Téléversement du package APK
         uses: actions/upload-artifact@v4
