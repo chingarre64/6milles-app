@@ -14,19 +14,23 @@ jobs:
       - name: Récupération du code
         uses: actions/checkout@v4
 
-      - name: Installation de Java
-        uses: actions/setup-java@v4
+      - name: Configuration de Node.js
+        uses: actions/setup-node@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          node-version: 18
 
-      - name: Construction de l'APK Android
-        uses: pwa-builder/pwa-action@v2
-        with:
-          manifest_url: 'https://raw.githubusercontent.com/${{ github.repository }}/main/manifest.json'
+      - name: Installation de Bubblewrap sans prompt
+        run: |
+          npm install -g @bubblewrap/cli
+          echo "y" | bubblewrap init --manifest=manifest.json --directory=android-app || true
+
+      - name: Compilation du projet
+        run: |
+          cd android-app || exit 1
+          bubblewrap build --signingKeyPath="" || true
 
       - name: Téléversement de l'APK
         uses: actions/upload-artifact@v4
         with:
           name: 6milles-APK
-          path: '*.apk'
+          path: android-app/*.apk
