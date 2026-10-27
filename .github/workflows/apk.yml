@@ -19,14 +19,23 @@ jobs:
         with:
           node-version: 18
 
-      - name: Installation de PWABuilder CLI
-        run: npm install -g @pwabuilder/cli
+      - name: Installation de Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Génération de l'APK Android
-        run: pwabuilder package -u "https://localhost" -p android -o ./output
+      - name: Installation de Bubblewrap CLI
+        run: npm install -g @bubblewrap/cli
+
+      - name: Initialisation du projet Android
+        run: |
+          bubblewrap init --manifest=manifest.json --directory=android-app
+          cd android-app
+          bubblewrap build
 
       - name: Téléversement de l'APK
         uses: actions/upload-artifact@v4
         with:
           name: 6milles-APK
-          path: output/
+          path: android-app/*.apk
