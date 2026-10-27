@@ -14,14 +14,32 @@ jobs:
       - name: Récupération du code
         uses: actions/checkout@v4
 
-      - name: Génération APK avec PWABuilder
-        uses: pwabuilder/pwa-action@v1.0.2
+      - name: Configuration de Node.js
+        uses: actions/setup-node@v4
         with:
-          pwa_url: 'https://chingarre64.github.io/6milles-app/'
-          output_dir: 'output'
+          node-version: 18
+
+      - name: Configuration de Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Installation et Build Capacitor
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "6milles" "com.manu.milles6" --web-dir .
+          npx cap add android
+          npx cap sync android
+
+      - name: Compilation APK Android
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Téléversement de l'APK
         uses: actions/upload-artifact@v4
         with:
           name: 6milles-APK
-          path: output/*.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
