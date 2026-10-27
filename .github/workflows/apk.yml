@@ -25,10 +25,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Installation et Build Capacitor
+      - name: Préparation des dossiers et compilation Capacitor
         run: |
+          mkdir -p www
+          cp -r index.html manifest.json sw.js noeuds www/ 2>/dev/null || true
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "6milles" "com.manu.milles6" --web-dir .
+          npx cap init "6milles" "com.manu.milles6" --web-dir www
           npx cap add android
           npx cap sync android
 
