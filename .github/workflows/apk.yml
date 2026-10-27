@@ -19,18 +19,27 @@ jobs:
         with:
           node-version: 18
 
-      - name: Installation de Bubblewrap sans prompt
-        run: |
-          npm install -g @bubblewrap/cli
-          echo "y" | bubblewrap init --manifest=manifest.json --directory=android-app || true
+      - name: Configuration de Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Compilation du projet
+      - name: Installation de Capacitor et création du projet Android
         run: |
-          cd android-app || exit 1
-          bubblewrap build --signingKeyPath="" || true
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "6milles" "com.manu.milles6" --web-dir .
+          npx cap add android
+          npx cap copy android
+
+      - name: Compilation de l'APK Android
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Téléversement de l'APK
         uses: actions/upload-artifact@v4
         with:
           name: 6milles-APK
-          path: android-app/*.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
