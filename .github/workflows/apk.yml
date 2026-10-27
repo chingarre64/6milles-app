@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - master
-  workflow_dispatch:
 
 jobs:
   build-apk:
@@ -18,14 +17,40 @@ jobs:
       - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
-      - name: Génération du package Android
+      - name: Configuration de Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Préparation du dossier www
         run: |
-          npx @pwabuilder/cli package -u "https://chingarre64.github.io/6milles-app/" -p android -o ./output
+          mkdir -p www
+          cp index.html manifest.json sw.js www/ 2>/dev/null || true
+          cp -r noeuds www/ 2>/dev/null || true
 
-      - name: Téléversement du package APK
+      - name: Initialisation Capacitor v5 (Version stable Charcuterie)
+        run: |
+          npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
+          npx cap init "6milles" "com.manu.milles6" --web-dir www
+          npx cap add android
+
+      - name: Configuration Android et Gradle
+        run: |
+          cd android
+          echo "android.enableJetifier=true" >> gradle.properties
+          echo "android.useAndroidX=true" >> gradle.properties
+          chmod +x gradlew
+
+      - name: Compilation de l'APK
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Téléversement de l'APK
         uses: actions/upload-artifact@v4
         with:
           name: 6milles-APK
-          path: output/*
+          path: android/app/build/outputs/apk/debug/app-debug.apk
