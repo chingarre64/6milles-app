@@ -32,10 +32,10 @@ jobs:
           cp logo-famille.png www/ 2>/dev/null || cp icon.png www/ 2>/dev/null || true
           cp -r noeuds www/ 2>/dev/null || true
 
-      - name: Initialisation Capacitor v5
+      - name: Initialisation Capacitor relié au site Web
         run: |
           npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
-          npx cap init "6milles" "com.manu.milles6" --web-dir www
+          npx cap init "6milles" "com.manu.milles6" --web-dir www --web-url "https://chingarre64.github.io/6milles-app/"
           npx cap add android
 
       - name: Application de l icône Android de la famille
@@ -47,16 +47,12 @@ jobs:
             find android/app/src/main/res/ -name "ic_launcher*.png" -exec cp "$ICON_SRC" {} \;
           fi
 
-      - name: Configuration permissions et déblocage SHOM (User-Agent Chrome)
+      - name: Permissions GPS et Réseau
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           PERMISSIONS='<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n<uses-permission android:name="android.permission.INTERNET" />\n<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />'
           sed -i "/<\/manifest>/i $PERMISSIONS" $MANIFEST
           sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' $MANIFEST
-
-          # Modification native Android pour forcer l'en-tête navigateur auprès du SHOM
-          ACTIVITY="android/app/src/main/java/com/manu/milles6/MainActivity.java"
-          sed -i 's/public class MainActivity extends BridgeActivity {}/public class MainActivity extends BridgeActivity {\n  @Override\n  public void onStart() {\n    super.onStart();\n    this.bridge.getWebView().getSettings().setUserAgentString("Mozilla\/5.0 (Linux; Android 10; Mobile) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/120.0.0.0 Mobile Safari\/537.36");\n  }\n}/g' $ACTIVITY
 
       - name: Configuration Android et Gradle
         run: |
