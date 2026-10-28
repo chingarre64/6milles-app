@@ -134,12 +134,7 @@
     .quota-table tr:nth-child(even) { background: rgba(30, 41, 59, 0.5); }
     .tag-quota { background: #eab308; color: #000; padding: 2px 5px; border-radius: 3px; font-weight: bold; font-size: 0.72rem; }
     .close-btn { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; z-index: 10001; }
-    .track-controls { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
-    .track-controls button { font-size: 0.78rem; padding: 6px; flex: 1; min-width: 30%; }
-    .boat-icon { font-size: 26px; text-align: center; line-height: 1; }
-    .spot-custom-icon { font-size: 22px; text-align: center; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-    .nav-btn-popup { margin-top: 6px; width: 100%; padding: 6px; background: #0284c7; color: #fff; border-radius: 4px; border: none; font-size: 0.8rem; cursor: pointer; }
-    .point-badge { background: #0284c7; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; border: 2px solid white; }
+    .boat-icon { font-size: 28px; text-align: center; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
   </style>
 </head>
 <body>
@@ -214,11 +209,15 @@
   </div>
 
   <script>
-    const map = L.map('map', { zoomControl: false }).setView([43.388, -1.663], 13);
+    const map = L.map('map', { zoomControl: false }).setView([43.388, -1.663], 12);
 
-    // FLUX CARTE SHOM OFFICIELLE
+    // FLUX SHOM AVEC AUTORISATION TILE
     const layers = {
-      shom: L.tileLayer('https://services.data.shom.fr/INSPIRE/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOMETRY-COMMUNS_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { maxZoom: 18, attribution: 'SHOM' }),
+      shom: L.tileLayer('https://services.data.shom.fr/INSPIRE/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOMETRY-COMMUNS_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { 
+        maxZoom: 18, 
+        minZoom: 3,
+        attribution: 'SHOM' 
+      }),
       osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }),
       sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 })
     };
@@ -227,6 +226,14 @@
     document.getElementById('map-select').addEventListener('change', (e) => {
       Object.values(layers).forEach(l => map.removeLayer(l));
       layers[e.target.value].addTo(map);
+    });
+
+    // ICÔNE BATEAU POUR LE GPS
+    const boatIcon = L.divIcon({
+      className: 'boat-icon',
+      html: '⛵',
+      iconSize: [30, 30],
+      iconAnchor: [15, 15]
     });
 
     if (window.DeviceOrientationEvent) {
@@ -333,12 +340,13 @@
         });
     }
 
+    // GÉOLOCALISATION AVEC ICÔNE BATEAU ⛵
     let userMarker = null;
     navigator.geolocation.watchPosition((pos) => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
       if (!userMarker) {
-        userMarker = L.marker([lat, lng]).addTo(map).bindPopup('Votre Bateau');
+        userMarker = L.marker([lat, lng], { icon: boatIcon }).addTo(map).bindPopup('Votre Bateau');
         map.setView([lat, lng], 13);
       } else {
         userMarker.setLatLng([lat, lng]);
