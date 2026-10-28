@@ -211,7 +211,7 @@
     const map = L.map('map', { zoomControl: false }).setView([43.388, -1.663], 12);
 
     const layers = {
-      shom: L.tileLayer('https://services.data.shom.fr/INSPIRE/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOMETRY-COMMUNS_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { maxZoom: 18, minZoom: 3, attribution: 'SHOM' }),
+      shom: L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=SHOM_RASTER_COTIER_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { maxZoom: 18, minZoom: 3, attribution: 'SHOM / IGN' }),
       osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }),
       sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 })
     };
