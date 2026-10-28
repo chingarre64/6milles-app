@@ -29,6 +29,7 @@ jobs:
         run: |
           mkdir -p www
           cp index.html manifest.json sw.js www/ 2>/dev/null || true
+          cp logo-famille.png www/ 2>/dev/null || cp icon.png www/ 2>/dev/null || true
           cp -r noeuds www/ 2>/dev/null || true
 
       - name: Initialisation Capacitor v5
@@ -36,6 +37,18 @@ jobs:
           npm install @capacitor/core@5.7.0 @capacitor/cli@5.7.0 @capacitor/android@5.7.0
           npx cap init "6milles" "com.manu.milles6" --web-dir www
           npx cap add android
+
+      - name: Application de la nouvelle icône Android
+        run: |
+          ICON_SOURCE="logo-famille.png"
+          if [ ! -f "$ICON_SOURCE" ]; then ICON_SOURCE="icon.png"; fi
+          if [ -f "$ICON_SOURCE" ]; then
+            for dir in android/app/src/main/res/mipmap-*; do
+              cp "$ICON_SOURCE" "$dir/ic_launcher.png" 2>/dev/null || true
+              cp "$ICON_SOURCE" "$dir/ic_launcher_round.png" 2>/dev/null || true
+              cp "$ICON_SOURCE" "$dir/ic_launcher_foreground.png" 2>/dev/null || true
+            done
+          fi
 
       - name: Configuration des permissions GPS (Android)
         run: |
