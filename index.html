@@ -125,9 +125,6 @@
     }
     .drawer-content { padding: 12px; overflow-y: auto; flex: 1; color: white; }
 
-    .modal-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 2px solid #0284c7; margin-bottom: 12px; }
-    .modal-header h2 { font-size: 1.1rem; color: #38bdf8; }
-    .modal-close-btn { background: #dc2626; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; width: auto; flex: none; }
     .quota-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left; margin-top: 10px; }
     .quota-table th, .quota-table td { padding: 8px 6px; border-bottom: 1px solid #334155; }
     .quota-table th { background: #1e293b; color: #0284c7; position: sticky; top: 0; }
@@ -211,8 +208,14 @@
   <script>
     const map = L.map('map', { zoomControl: false }).setView([43.388, -1.663], 12);
 
+    // FLUX SHOM AVEC DEBLOCAGE CROSSORIGIN
     const layers = {
-      shom: L.tileLayer('https://services.data.shom.fr/INSPIRE/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOMETRY-COMMUNS_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { maxZoom: 18, minZoom: 3, attribution: 'SHOM' }),
+      shom: L.tileLayer('https://services.data.shom.fr/INSPIRE/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOMETRY-COMMUNS_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { 
+        maxZoom: 18, 
+        minZoom: 3,
+        crossOrigin: true,
+        attribution: 'SHOM' 
+      }),
       osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }),
       sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 })
     };
