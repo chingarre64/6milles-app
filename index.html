@@ -212,9 +212,8 @@
     <div class="top-bar" id="topBar">
       <div class="row">
         <select id="mapSelect" onchange="changeMapLayer(this.value)">
-          <option value="shom">🌊 Carte SHOM (Officielle)</option>
-          <option value="seamap">🗺️ OpenSeaMap</option>
-          <option value="sat">🛰️ Vue Satellite</option>
+          <option value="shom">🌊 Carte Marine (OpenSeaMap)</option>
+          <option value="sat">🛰️ Vue Satellite + Balises</option>
         </select>
         <select id="portSelect" onchange="changePort(this.value)">
           <option value="sjl">⚓ St-Jean-de-Luz</option>
@@ -566,24 +565,33 @@
 
     let map = L.map('map', { center: [abris.sjl.lat, abris.sjl.lng], zoom: 11 });
 
-    // FLUX SHOM WMS OFFICIEL (Compatible APK et hors ligne)
-    const shomLayer = L.tileLayer.wms('https://data.geopf.fr/wms-r/wms?', {
-      layers: 'GEOGRAPHICALGRIDSYSTEMS.COASTALMAPS',
-      format: 'image/png',
-      transparent: true,
-      maxZoom: 18,
-      attribution: '© SHOM / IGN'
+    // Fond de plan OpenStreetMap (100% stable dans les APKs et hors-ligne)
+    const osmBase = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    const osmBase = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
-    const seamarkOverlay = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', { maxZoom: 18 });
+    // Couche des balises, phares et amers maritimes par-dessus
+    const seamarkOverlay = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', { 
+      maxZoom: 18,
+      attribution: '© OpenSeaMap'
+    }).addTo(map);
+
+    // Fond Satellite de secours
     const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 });
 
     function changeMapLayer(type) {
-      map.removeLayer(shomLayer); map.removeLayer(osmBase); map.removeLayer(seamarkOverlay); map.removeLayer(satLayer);
-      if (type === 'shom') shomLayer.addTo(map);
-      else if (type === 'seamap') { osmBase.addTo(map); seamarkOverlay.addTo(map); }
-      else if (type === 'sat') satLayer.addTo(map);
+      if (map.hasLayer(osmBase)) map.removeLayer(osmBase);
+      if (map.hasLayer(seamarkOverlay)) map.removeLayer(seamarkOverlay);
+      if (map.hasLayer(satLayer)) map.removeLayer(satLayer);
+
+      if (type === 'shom') {
+        osmBase.addTo(map);
+        seamarkOverlay.addTo(map);
+      } else if (type === 'sat') {
+        satLayer.addTo(map);
+        seamarkOverlay.addTo(map);
+      }
     }
 
     let circle = L.circle([abris.sjl.lat, abris.sjl.lng], { radius: 11112, color: '#eab308', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 2, dashArray: '6, 6' }).addTo(map);
