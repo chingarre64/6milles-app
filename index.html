@@ -155,7 +155,7 @@
           <option value="">⚓ Choisir un port...</option>
           <option value="43.388, -1.663">St-Jean-de-Luz</option>
           <option value="43.528, -1.530">Capbreton</option>
-          <option value="43.483, -1.560">Biarrits</option>
+          <option value="43.483, -1.560">Biarritz</option>
           <option value="43.360, -1.780">Hendaye</option>
           <option value="43.660, -1.440">Vieux-Boucau</option>
         </select>
@@ -175,7 +175,7 @@
         </select>
       </div>
       <div class="row">
-        <button id="btn-gps" class="active">💸 GPS (ON)</button>
+        <button id="btn-gps" class="active">📍 GPS (ON)</button>
         <button id="btn-tab-trajet">📐 Trajet</button>
         <button id="btn-tab-conso">⛽ Conso</button>
         <button id="btn-tab-noeuds">🪢 Nœuds</button>
@@ -196,7 +196,6 @@
 
     <div id="map"></div>
 
-    <!-- PANNEAU RETRACTABLE BOTTOM DRAWER -->
     <div class="drawer" id="drawer">
       <div class="drawer-handle" id="drawer-handle">
         <span>= ↕️ GLISSER POUR ÉTIRER LE PANNEAU ↕️ =</span>
@@ -210,14 +209,11 @@
           <button id="tab-btn-noeuds">🪢 Nœuds</button>
         </div>
       </div>
-      <div class="drawer-content" id="drawer-content">
-        <!-- Contenu dynamique géré en JS -->
-      </div>
+      <div class="drawer-content" id="drawer-content"></div>
     </div>
   </div>
 
   <script>
-    // Initialisation Carte
     const map = L.map('map', { zoomControl: false }).setView([43.388, -1.663], 13);
 
     const layers = {
@@ -232,7 +228,6 @@
       layers[e.target.value].addTo(map);
     });
 
-    // Compas / Orientation
     if (window.DeviceOrientationEvent) {
       window.addEventListener('deviceorientation', (e) => {
         let alpha = e.alpha || 0;
@@ -242,7 +237,6 @@
       });
     }
 
-    // Gestion Drawer (Panneau)
     const drawer = document.getElementById('drawer');
     const drawerContent = document.getElementById('drawer-content');
     
@@ -319,8 +313,7 @@
       const lph = parseFloat(document.getElementById('conso-lph').value);
       const spd = parseFloat(document.getElementById('conso-speed').value);
       if (lph && spd) {
-        const perNm = (lph / spd).toFixed(2);
-        document.getElementById('conso-res').innerText = `Consommation estimée : ${perNm} L / Mille Nautique`;
+        document.getElementById('conso-res').innerText = `Consommation : ${(lph / spd).toFixed(2)} L / Mille Nautique`;
       }
     }
 
@@ -329,7 +322,7 @@
         .then(res => res.json())
         .then(data => {
           if (data.current_weather) {
-            document.getElementById('meteo-wind').innerHTML = `Vent Moyen: <b>${data.current_weather.windspeed} km/h</b> (Dir: ${data.current_weather.winddirection}°)`;
+            document.getElementById('meteo-wind').innerHTML = `Vent Moyen: <b>${data.current_weather.windspeed} km/h</b> (${data.current_weather.winddirection}°)`;
             document.getElementById('meteo-wave').innerHTML = `Houle: <b>1.2m / 8s</b> (Secteur Ouest)`;
           }
         })
@@ -339,11 +332,16 @@
         });
     }
 
-    // Centrage GPS
+    let userMarker = null;
     navigator.geolocation.watchPosition((pos) => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
-      map.setView([lat, lng]);
+      if (!userMarker) {
+        userMarker = L.marker([lat, lng]).addTo(map).bindPopup('Votre Bateau');
+        map.setView([lat, lng], 13);
+      } else {
+        userMarker.setLatLng([lat, lng]);
+      }
     }, () => {}, { enableHighAccuracy: true });
   </script>
 </body>
