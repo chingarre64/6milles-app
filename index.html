@@ -146,24 +146,24 @@
         </select>
         <select id="port-select">
           <option value="">⚓ Choisir un port...</option>
-          <option value="43.388, -1.663">St-Jean-de-Luz</option>
-          <option value="43.528, -1.530">Capbreton</option>
-          <option value="43.483, -1.560">Biarritz</option>
-          <option value="43.360, -1.780">Hendaye</option>
-          <option value="43.660, -1.440">Vieux-Boucau</option>
+          <option value="43.388,-1.663">St-Jean-de-Luz</option>
+          <option value="43.528,-1.530">Capbreton</option>
+          <option value="43.483,-1.560">Biarritz</option>
+          <option value="43.360,-1.780">Hendaye</option>
+          <option value="43.660,-1.440">Vieux-Boucau</option>
         </select>
       </div>
       <div class="row">
         <select id="spot-select">
           <option value="">🎯 SPOTS & ESPÈCES DE PÊCHE...</option>
           <optgroup label="Secteur St-Jean-de-Luz / Socoa">
-            <option value="43.395, -1.680">Les Briquets (Thon, Lieu, Bar)</option>
-            <option value="43.410, -1.670">Fosse de Socoa (Chipiron, Merlu)</option>
-            <option value="43.390, -1.700">Baie de Loya (Dorade, Sar)</option>
+            <option value="43.395,-1.680">Les Briquets (Thon, Lieu, Bar)</option>
+            <option value="43.410,-1.670">Fosse de Socoa (Chipiron, Merlu)</option>
+            <option value="43.390,-1.700">Baie de Loya (Dorade, Sar)</option>
           </optgroup>
           <optgroup label="Secteur Capbreton / Gouf">
-            <option value="43.535, -1.460">Tête du Gouf (Thon Rouge, Bonite)</option>
-            <option value="43.520, -1.480">Bords du Fosse (Merlu, Lieu)</option>
+            <option value="43.535,-1.460">Tête du Gouf (Thon Rouge, Bonite)</option>
+            <option value="43.520,-1.480">Bords du Fosse (Merlu, Lieu)</option>
           </optgroup>
         </select>
       </div>
@@ -209,18 +209,55 @@
   <script>
     const map = L.map('map', { zoomControl: false }).setView([43.388, -1.663], 12);
 
+    // FLUX SHOM OFFICIEL HÉBERGÉ VIA LA GEOPLATEFORME (SANS BLOCAGE)
     const layers = {
-      shom: L.tileLayer('https://services.data.shom.fr/INSPIRE/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOMETRY-COMMUNS_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { maxZoom: 18, minZoom: 3, attribution: 'SHOM' }),
+      shom: L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=SHOM_RASTER_COTIER_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { maxZoom: 18, minZoom: 3, attribution: 'SHOM / IGN' }),
       osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }),
       sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 })
     };
     layers.shom.addTo(map);
 
+    // MARQUEURS DES SPOTS DE PÊCHE
+    const spots = [
+      { coords: [43.395, -1.680], title: 'Les Briquets (Thon, Lieu, Bar)', icon: '🐟' },
+      { coords: [43.410, -1.670], title: 'Fosse de Socoa (Chipiron, Merlu)', icon: '🦑' },
+      { coords: [43.390, -1.700], title: 'Baie de Loya (Dorade, Sar)', icon: '🐠' },
+      { coords: [43.535, -1.460], title: 'Tête du Gouf (Thon Rouge, Bonite)', icon: '🐟' },
+      { coords: [43.520, -1.480], title: 'Bords du Fosse (Merlu, Lieu)', icon: '🎣' }
+    ];
+
+    spots.forEach(spot => {
+      const spotIcon = L.divIcon({
+        className: 'spot-icon',
+        html: `<span style="font-size:22px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));">${spot.icon}</span>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      });
+      L.marker(spot.coords, { icon: spotIcon }).addTo(map).bindPopup(`<b>${spot.title}</b>`);
+    });
+
+    // CHANGER DE CARTE
     document.getElementById('map-select').addEventListener('change', (e) => {
       Object.values(layers).forEach(l => map.removeLayer(l));
       layers[e.target.value].addTo(map);
     });
 
+    // NAVIGATION PAR PORTS ET SPOTS
+    document.getElementById('port-select').addEventListener('change', (e) => {
+      if (e.target.value) {
+        const c = e.target.value.split(',').map(Number);
+        map.setView(c, 14);
+      }
+    });
+
+    document.getElementById('spot-select').addEventListener('change', (e) => {
+      if (e.target.value) {
+        const c = e.target.value.split(',').map(Number);
+        map.setView(c, 14);
+      }
+    });
+
+    // ICONE BATEAU POUR LE GPS
     const boatIcon = L.divIcon({
       className: 'boat-icon',
       html: '⛵',
@@ -228,6 +265,7 @@
       iconAnchor: [15, 15]
     });
 
+    // COMPAS
     if (window.DeviceOrientationEvent) {
       window.addEventListener('deviceorientation', (e) => {
         let alpha = e.alpha || 0;
@@ -237,6 +275,7 @@
       });
     }
 
+    // PANNEAU RETRACTABLE
     const drawer = document.getElementById('drawer');
     const drawerContent = document.getElementById('drawer-content');
     
@@ -332,6 +371,7 @@
         });
     }
 
+    // BOUTON GPS
     let watchId = null;
     let userMarker = null;
     const btnGps = document.getElementById('btn-gps');
