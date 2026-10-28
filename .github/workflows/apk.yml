@@ -38,15 +38,18 @@ jobs:
           npx cap init "6milles" "com.manu.milles6" --web-dir www
           npx cap add android
 
-      - name: Application de la nouvelle icône Android
+      - name: Application de l icône Android
         run: |
-          ICON_SOURCE="logo-famille.png"
-          if [ ! -f "$ICON_SOURCE" ]; then ICON_SOURCE="icon.png"; fi
-          if [ -f "$ICON_SOURCE" ]; then
-            for dir in android/app/src/main/res/mipmap-*; do
-              cp "$ICON_SOURCE" "$dir/ic_launcher.png" 2>/dev/null || true
-              cp "$ICON_SOURCE" "$dir/ic_launcher_round.png" 2>/dev/null || true
-              cp "$ICON_SOURCE" "$dir/ic_launcher_foreground.png" 2>/dev/null || true
+          ICON_SOURCE=""
+          if [ -f "logo-famille.png" ]; then ICON_SOURCE="logo-famille.png"; elif [ -f "icon.png" ]; then ICON_SOURCE="icon.png"; fi
+          
+          if [ -n "$ICON_SOURCE" ]; then
+            for res_dir in android/app/src/main/res/mipmap-*; do
+              if [ -d "$res_dir" ]; then
+                cp "$ICON_SOURCE" "$res_dir/ic_launcher.png"
+                cp "$ICON_SOURCE" "$res_dir/ic_launcher_round.png"
+                cp "$ICON_SOURCE" "$res_dir/ic_launcher_foreground.png"
+              fi
             done
           fi
 
