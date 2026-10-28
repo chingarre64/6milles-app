@@ -1,0 +1,9 @@
+{
+  "appId": "com.manu.milles6",
+  "appName": "6milles",
+  "webDir": "www",
+  "server": {
+    "url": "https://chingarre64.github.io/6milles-app/",
+    "cleartext": true
+  }
+}
