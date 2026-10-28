@@ -47,11 +47,12 @@ jobs:
             find android/app/src/main/res/ -name "ic_launcher*.png" -exec cp "$ICON_SRC" {} \;
           fi
 
-      - name: Configuration des permissions GPS (Android)
+      - name: Configuration des permissions GPS et Réseau (Android)
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
-          PERMISSIONS='<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />'
+          PERMISSIONS='<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n<uses-permission android:name="android.permission.INTERNET" />\n<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />'
           sed -i "/<\/manifest>/i $PERMISSIONS" $MANIFEST
+          sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' $MANIFEST
 
       - name: Configuration Android et Gradle
         run: |
