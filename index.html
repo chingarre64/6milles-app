@@ -170,7 +170,7 @@
         </select>
       </div>
       <div class="row">
-        <button id="btn-gps" class="active">📍 GPS (ON)</button>
+        <button id="btn-gps">📍 GPS (OFF)</button>
         <button id="btn-tab-trajet">📐 Trajet</button>
         <button id="btn-tab-conso">⛽ Conso</button>
         <button id="btn-tab-noeuds">🪢 Nœuds</button>
@@ -211,13 +211,8 @@
   <script>
     const map = L.map('map', { zoomControl: false }).setView([43.388, -1.663], 12);
 
-    // FLUX SHOM AVEC AUTORISATION TILE
     const layers = {
-      shom: L.tileLayer('https://services.data.shom.fr/INSPIRE/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOMETRY-COMMUNS_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { 
-        maxZoom: 18, 
-        minZoom: 3,
-        attribution: 'SHOM' 
-      }),
+      shom: L.tileLayer('https://services.data.shom.fr/INSPIRE/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOMETRY-COMMUNS_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { maxZoom: 18, minZoom: 3, attribution: 'SHOM' }),
       osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }),
       sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 })
     };
@@ -228,7 +223,6 @@
       layers[e.target.value].addTo(map);
     });
 
-    // ICÔNE BATEAU POUR LE GPS
     const boatIcon = L.divIcon({
       className: 'boat-icon',
       html: '⛵',
@@ -340,18 +334,37 @@
         });
     }
 
-    // GÉOLOCALISATION AVEC ICÔNE BATEAU ⛵
+    let watchId = null;
     let userMarker = null;
-    navigator.geolocation.watchPosition((pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      if (!userMarker) {
-        userMarker = L.marker([lat, lng], { icon: boatIcon }).addTo(map).bindPopup('Votre Bateau');
-        map.setView([lat, lng], 13);
+    const btnGps = document.getElementById('btn-gps');
+
+    btnGps.addEventListener('click', () => {
+      if (watchId === null) {
+        btnGps.classList.add('active');
+        btnGps.innerText = "📍 GPS (ON)";
+        watchId = navigator.geolocation.watchPosition((pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          if (!userMarker) {
+            userMarker = L.marker([lat, lng], { icon: boatIcon }).addTo(map).bindPopup('Votre Bateau');
+            map.setView([lat, lng], 13);
+          } else {
+            userMarker.setLatLng([lat, lng]);
+          }
+        }, (err) => {
+          alert("Erreur d'accès au GPS : " + err.message);
+        }, { enableHighAccuracy: true });
       } else {
-        userMarker.setLatLng([lat, lng]);
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        btnGps.classList.remove('active');
+        btnGps.innerText = "📍 GPS (OFF)";
+        if (userMarker) {
+          map.removeLayer(userMarker);
+          userMarker = null;
+        }
       }
-    }, () => {}, { enableHighAccuracy: true });
+    });
   </script>
 </body>
 </html>
