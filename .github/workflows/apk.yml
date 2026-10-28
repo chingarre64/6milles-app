@@ -38,7 +38,7 @@ jobs:
           npx cap init "6milles" "com.manu.milles6" --web-dir www
           npx cap add android
 
-      - name: Remplacement de l icône Android
+      - name: Application de l icône Android de la famille
         run: |
           ICON_SRC=""
           if [ -f "logo-famille.png" ]; then ICON_SRC="logo-famille.png"; elif [ -f "icon.png" ]; then ICON_SRC="icon.png"; fi
