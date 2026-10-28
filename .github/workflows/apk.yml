@@ -38,7 +38,7 @@ jobs:
           npx cap init "6milles" "com.manu.milles6" --web-dir www
           npx cap add android
 
-      - name: Application de l icône Android de la famille
+      - name: Remplacement de l icône Android par logo-famille
         run: |
           ICON_SRC=""
           if [ -f "logo-famille.png" ]; then ICON_SRC="logo-famille.png"; elif [ -f "icon.png" ]; then ICON_SRC="icon.png"; fi
@@ -47,7 +47,7 @@ jobs:
             find android/app/src/main/res/ -name "ic_launcher*.png" -exec cp "$ICON_SRC" {} \;
           fi
 
-      - name: Configuration des permissions GPS et Réseau (Android)
+      - name: Configuration permissions GPS et Réseau
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           PERMISSIONS='<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n<uses-permission android:name="android.permission.INTERNET" />\n<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />'
