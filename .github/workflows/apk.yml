@@ -38,19 +38,13 @@ jobs:
           npx cap init "6milles" "com.manu.milles6" --web-dir www
           npx cap add android
 
-      - name: Application de l icône Android
+      - name: Remplacement de l icône Android
         run: |
-          ICON_SOURCE=""
-          if [ -f "logo-famille.png" ]; then ICON_SOURCE="logo-famille.png"; elif [ -f "icon.png" ]; then ICON_SOURCE="icon.png"; fi
+          ICON_SRC=""
+          if [ -f "logo-famille.png" ]; then ICON_SRC="logo-famille.png"; elif [ -f "icon.png" ]; then ICON_SRC="icon.png"; fi
           
-          if [ -n "$ICON_SOURCE" ]; then
-            for res_dir in android/app/src/main/res/mipmap-*; do
-              if [ -d "$res_dir" ]; then
-                cp "$ICON_SOURCE" "$res_dir/ic_launcher.png"
-                cp "$ICON_SOURCE" "$res_dir/ic_launcher_round.png"
-                cp "$ICON_SOURCE" "$res_dir/ic_launcher_foreground.png"
-              fi
-            done
+          if [ -n "$ICON_SRC" ]; then
+            find android/app/src/main/res/ -name "ic_launcher*.png" -exec cp "$ICON_SRC" {} \;
           fi
 
       - name: Configuration des permissions GPS (Android)
@@ -66,12 +60,12 @@ jobs:
           echo "android.useAndroidX=true" >> gradle.properties
           chmod +x gradlew
 
-      - name: Compilation de l'APK
+      - name: Compilation de l APK
         run: |
           cd android
           ./gradlew assembleDebug --no-daemon
 
-      - name: Téléversement de l'APK
+      - name: Téléversement de l APK
         uses: actions/upload-artifact@v4
         with:
           name: 6milles-APK
