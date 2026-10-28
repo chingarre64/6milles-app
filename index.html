@@ -4,38 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>6milles apps by manu</title>
-  <link rel="icon" type="image/png" href="logo-famille.png">
-  <link rel="apple-touch-icon" href="logo-famille.png">
   <link rel="manifest" href="./manifest.json">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html { width: 100%; height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: white; }
+    body, html { width: 100%; height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #fff; overflow: hidden; }
     #app { display: flex; flex-direction: column; height: 100vh; position: relative; width: 100%; }
-
-    .top-bar {
+    
+    .top-bar { 
       position: fixed;
       top: 0; left: 0; right: 0;
-      background: #1e293b;
-      padding: 8px;
-      display: flex; flex-direction: column; gap: 6px;
-      z-index: 10000;
-      border-bottom: 2px solid #0284c7;
+      background: #1e293b; 
+      padding: 8px; 
+      display: flex; flex-direction: column; gap: 6px; 
+      z-index: 10000; 
+      border-bottom: 2px solid #0284c7; 
       box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
     .row { display: flex; gap: 4px; width: 100%; }
-
-    select, button, input { flex: 1; background: #0f172a; color: #38bdf8; border: 1px solid #0284c7; padding: 8px 2px; border-radius: 6px; font-weight: bold; font-size: 0.8rem; text-align: center; }
+    
+    select, button, input { flex: 1; background: #0f172a; color: #38bdf8; border: 1px solid #0284c7; padding: 8px 2px; border-radius: 6px; font-size: 0.78rem; font-weight: bold; white-space: nowrap; }
     button { background: #0284c7; color: white; cursor: pointer; transition: background 0.2s; border: none; }
     button:hover { background: #0369a1; }
     button.active { background: #eab308 !important; color: #000; }
-
-    #map {
-      width: 100%;
-      height: 100vh;
+    
+    #map { 
+      width: 100%; 
+      height: 100vh; 
       padding-top: 100px;
-      z-index: 1;
+      z-index: 1; 
     }
 
     /* COMPAS MARIN CADRAN */
@@ -54,355 +52,1015 @@
       justify-content: center;
       box-shadow: 0 6px 16px rgba(0,0,0,0.7), inset 0 0 8px rgba(2,132,199,0.5);
     }
-    .compass-dial {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      transition: transform 0.1s linear;
-    }
-    .compass-mark {
+
+    .compass-lubber-line {
       position: absolute;
-      font-size: 10px;
-      font-weight: 900;
-      color: #94a3b8;
-    }
-    .compass-mark.n { top: 3px; left: 50%; transform: translateX(-50%); color: #ef4444; }
-    .compass-mark.s { bottom: 3px; left: 50%; transform: translateX(-50%); }
-    .compass-mark.e { right: 4px; top: 50%; transform: translateY(-50%); }
-    .compass-mark.w { left: 4px; top: 50%; transform: translateY(-50%); }
-    .compass-arrow {
-      position: absolute;
-      top: 50%; left: 50%;
-      width: 4px; height: 32px;
-      margin-top: -16px; margin-left: -2px;
-      background: linear-gradient(to bottom, #ef4444 50%, #f8fafc 50%);
-      border-radius: 2px;
-    }
-    .compass-val {
-      position: absolute;
-      bottom: -18px;
+      top: 2px;
       left: 50%;
       transform: translateX(-50%);
-      background: #000;
-      color: #eab308;
-      font-size: 10px;
-      font-weight: bold;
-      padding: 1px 4px;
-      border-radius: 4px;
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 8px solid #ef4444;
+      z-index: 10001;
+    }
+
+    .compass-dial {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 1px solid #334155;
+      position: relative;
+      transition: transform 0.2s ease-out;
+      background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+    }
+
+    .compass-point {
+      position: absolute;
+      font-size: 0.65rem;
+      font-weight: 900;
+      transform: translateX(-50%);
+    }
+    .point-n { top: 2px; left: 50%; color: #ef4444; }
+    .point-e { top: 22px; right: 2px; color: #38bdf8; transform: none; }
+    .point-s { bottom: 2px; left: 50%; color: #38bdf8; }
+    .point-w { top: 22px; left: 4px; color: #38bdf8; transform: none; }
+
+    .compass-heading-val {
+      position: absolute;
+      bottom: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95);
       border: 1px solid #0284c7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: bold;
+      color: #eab308;
       white-space: nowrap;
     }
 
-    /* PANNEAU RETRACTABLE */
-    .drawer {
-      position: fixed;
-      bottom: -100%;
-      left: 0; right: 0;
-      height: 55vh;
-      background: #0f172a;
-      border-top: 3px solid #0284c7;
-      border-radius: 16px 16px 0 0;
-      z-index: 10001;
-      transition: bottom 0.3s ease;
+    /* PANNEAU DE NAVIGATION REDIMENSIONNABLE */
+    .info-panel {
+      position: absolute;
+      bottom: 10px; left: 10px; right: 10px;
+      max-width: 500px; margin: 0 auto;
+      background: rgba(15, 23, 42, 0.98);
+      border: 1px solid #0284c7;
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      padding: 4px 12px 12px 12px;
+      z-index: 9999;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+      height: 380px;
+      min-height: 160px;
+      max-height: 85vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 -8px 24px rgba(0,0,0,0.6);
+      touch-action: none;
     }
-    .drawer.open { bottom: 0; }
-    .drawer-handle {
-      background: #1e293b;
-      padding: 10px;
-      text-align: center;
-      font-weight: bold;
+
+    .drag-handle {
+      text-align: center; 
+      font-size: 0.75rem; 
       color: #38bdf8;
-      font-size: 0.85rem;
-      cursor: pointer;
-      border-radius: 13px 13px 0 0;
-      border-bottom: 1px solid #334155;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 6px 0;
+      cursor: ns-resize; 
+      user-select: none;
+      font-weight: bold; 
+      letter-spacing: 2px;
+      background: #1e293b;
+      margin: -4px -12px 8px -12px;
+      border-top-left-radius: 11px;
+      border-top-right-radius: 11px;
+      border-bottom: 1px solid #0284c7;
     }
-    .drawer-content { padding: 12px; overflow-y: auto; flex: 1; color: white; }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .panel-tabs { display: flex; gap: 4px; margin-bottom: 8px; border-bottom: 1px solid #334155; padding-bottom: 6px; }
+    .panel-tabs button { padding: 6px 2px; font-size: 0.75rem; background: #1e293b; color: #94a3b8; }
+    .panel-tabs button.active-tab { background: #0284c7; color: #fff; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .compact-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: #1e293b; border-radius: 6px; border: 1px solid #334155; margin-bottom: 6px; font-size: 0.82rem; }
+    .compact-row label { color: #94a3b8; font-size: 0.75rem; }
+    .compact-row span { font-weight: bold; color: #38bdf8; font-size: 0.95rem; }
+    
+    .safety-highlight { background: rgba(34, 197, 94, 0.15); border: 1px solid #22c55e; }
+    .safety-highlight span { color: #22c55e; font-size: 1.1rem; }
+
+    /* CARTES NŒUDS AVEC LECTEUR PDF LOCAL */
+    .knot-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+    .knot-card h4 { font-size: 0.88rem; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+    .knot-tag { font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .tag-raccord { background: #0284c7; color: #fff; }
+    .tag-terminal { background: #16a34a; color: #fff; }
+    .tag-potence { background: #eab308; color: #000; }
+    .pdf-frame { width: 100%; height: 360px; border-radius: 6px; border: 1px solid #0284c7; background: #0f172a; margin-bottom: 6px; }
+    .pdf-btn { display: block; text-align: center; padding: 8px; background: #0284c7; color: #fff; border-radius: 6px; text-decoration: none; font-size: 0.78rem; font-weight: bold; }
+    .pdf-btn:hover { background: #0369a1; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.98);
+      z-index: 20000;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 12px; border-bottom: 2px solid #0284c7; margin-bottom: 12px;
+    }
+    .modal-header h2 { font-size: 1.1rem; color: #38bdf8; }
+    .modal-close-btn { background: #dc2626; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; width: auto; flex: none; }
 
     .quota-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; text-align: left; margin-top: 10px; }
     .quota-table th, .quota-table td { padding: 8px 6px; border-bottom: 1px solid #334155; }
     .quota-table th { background: #1e293b; color: #0284c7; position: sticky; top: 0; }
     .quota-table tr:nth-child(even) { background: rgba(30, 41, 59, 0.5); }
     .tag-quota { background: #eab308; color: #000; padding: 2px 5px; border-radius: 3px; font-weight: bold; font-size: 0.72rem; }
+
     .close-btn { position: absolute; top: 6px; right: 8px; background: none; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; z-index: 10001; }
-    .boat-icon { font-size: 28px; text-align: center; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+    .track-controls { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .track-controls button { font-size: 0.78rem; padding: 6px; flex: 1; min-width: 30%; }
+
+    .boat-icon { font-size: 26px; text-align: center; line-height: 1; }
+    .spot-custom-icon { font-size: 22px; text-align: center; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+    .nav-btn-popup { margin-top: 6px; width: 100%; padding: 6px; background: #0284c7; color: #fff; border-radius: 4px; border: none; font-size: 0.8rem; cursor: pointer; }
+    .point-badge { background: #0284c7; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; border: 2px solid white; }
   </style>
 </head>
 <body>
   <div id="app">
-    <div class="top-bar">
+    <div class="top-bar" id="topBar">
       <div class="row">
-        <select id="map-select">
+        <select id="mapSelect" onchange="changeMapLayer(this.value)">
           <option value="shom">🌊 Carte SHOM (Officielle)</option>
-          <option value="osm">🌍 OpenStreetMap (Standard)</option>
+          <option value="seamap">🗺️ OpenSeaMap</option>
           <option value="sat">🛰️ Vue Satellite</option>
         </select>
-        <select id="port-select">
-          <option value="">⚓ Choisir un port...</option>
-          <option value="43.388,-1.663">St-Jean-de-Luz</option>
-          <option value="43.528,-1.530">Capbreton</option>
-          <option value="43.483,-1.560">Biarritz</option>
-          <option value="43.360,-1.780">Hendaye</option>
-          <option value="43.660,-1.440">Vieux-Boucau</option>
+        <select id="portSelect" onchange="changePort(this.value)">
+          <option value="sjl">⚓ St-Jean-de-Luz</option>
+          <option value="hendaye">⚓ Hendaye</option>
+          <option value="biarritz">⚓ Biarritz</option>
+          <option value="capbreton">⚓ Capbreton</option>
+          <option value="custom">📍 Point personnalisé (clic)</option>
         </select>
       </div>
+
       <div class="row">
-        <select id="spot-select">
+        <select id="pelagicSelect" onchange="selectSpotOfInterest(this.value)">
           <option value="">🎯 SPOTS & ESPÈCES DE PÊCHE...</option>
-          <optgroup label="Secteur St-Jean-de-Luz / Socoa">
-            <option value="43.395,-1.680">Les Briquets (Thon, Lieu, Bar)</option>
-            <option value="43.410,-1.670">Fosse de Socoa (Chipiron, Merlu)</option>
-            <option value="43.390,-1.700">Baie de Loya (Dorade, Sar)</option>
+          <optgroup label="🦑 Chipirons & Seiches">
+            <option value="socoa_chipirons">Baie de Socoa / Artha (-8m)</option>
+            <option value="barbe_chipirons">Pointe Sainte-Barbe (-10m)</option>
+            <option value="hendaye_chenal">Chenal Hendaye / Txingudi</option>
+            <option value="capbreton_estacade">Sortie Port Capbreton</option>
           </optgroup>
-          <optgroup label="Secteur Capbreton / Gouf">
-            <option value="43.535,-1.460">Tête du Gouf (Thon Rouge, Bonite)</option>
-            <option value="43.520,-1.480">Bords du Fosse (Merlu, Lieu)</option>
+          <optgroup label="⚡ Bonites & Thons">
+            <option value="cassure_gouf">Gouf de Capbreton (-50m)</option>
+            <option value="large_jaizkibel">Large de Jaizkibel (3-5M)</option>
+            <option value="socoa_large">Large St-Jean-de-Luz</option>
+          </optgroup>
+          <optgroup label="🐟 Maquereaux">
+            <option value="passe_capbreton">Passe de Capbreton (-25m)</option>
+            <option value="large_socoa">Plateau de Socoa (-20m)</option>
+            <option value="haut_fond_briquets">Haut-fond Briquets (-28m)</option>
+          </optgroup>
+          <optgroup label="⚓ Épaves & Roches">
+            <option value="pietro">Épave Pietro Orseolo (-35m)</option>
+            <option value="souvenir">Épave Le Souvenir (-18m)</option>
+            <option value="socoa">Roches Socoa / Belharra</option>
           </optgroup>
         </select>
       </div>
+
       <div class="row">
-        <button id="btn-gps">📍 GPS (OFF)</button>
-        <button id="btn-tab-trajet">📐 Trajet</button>
-        <button id="btn-tab-conso">⛽ Conso</button>
-        <button id="btn-tab-noeuds">🪢 Nœuds</button>
-        <button id="btn-tab-quotas">📜 Quotas</button>
+        <button onclick="toggleGPS()" id="gpsBtn">🛰️ Mon GPS</button>
+        <button onclick="toggleRouteMode()" id="routeBtn">📐 Trajet</button>
+        <button onclick="toggleFuelPanel()" id="fuelBtn">⛽ Conso</button>
+        <button onclick="toggleKnotsPanel()" id="knotsBtn" style="background:#0284c7;">🪢 Nœuds</button>
+        <button onclick="openQuotaModal()" id="quotaBtn" style="background:#0284c7;">📜 Quotas</button>
       </div>
     </div>
 
-    <div class="compass-widget">
-      <div class="compass-dial" id="compass-dial">
-        <div class="compass-mark n">N</div>
-        <div class="compass-mark e">E</div>
-        <div class="compass-mark s">S</div>
-        <div class="compass-mark w">W</div>
-        <div class="compass-arrow"></div>
+    <!-- COMPAS MARIN CADRAN -->
+    <div id="compassWidget" class="compass-widget">
+      <div class="compass-lubber-line"></div>
+      <div id="compassDial" class="compass-dial">
+        <span class="compass-point point-n">N</span>
+        <span class="compass-point point-e">E</span>
+        <span class="compass-point point-s">S</span>
+        <span class="compass-point point-w">W</span>
       </div>
-      <div class="compass-val" id="compass-val">---°</div>
+      <div id="compassVal" class="compass-heading-val">---°</div>
     </div>
 
     <div id="map"></div>
 
-    <div class="drawer" id="drawer">
-      <div class="drawer-handle" id="drawer-handle">
-        <span>= ↕️ GLISSER POUR ÉTIRER LE PANNEAU ↕️ =</span>
-        <button class="close-btn" id="drawer-close-btn">✕</button>
-      </div>
-      <div style="padding: 6px 12px 0 12px;">
-        <div class="row">
-          <button id="tab-btn-trajet" class="active">📐 Trajet</button>
-          <button id="tab-btn-conso">⛽ Conso</button>
-          <button id="tab-btn-meteo">🌊 Météo</button>
-          <button id="tab-btn-noeuds">🪢 Nœuds</button>
+    <div id="infoPanel" class="info-panel" style="display: none;">
+      <div class="drag-handle" id="dragHandle">═ ↕️ GLISSER POUR ÉTIRER LE PANNEAU ↕️ ═</div>
+      <button class="close-btn" onclick="hideInfoPanel()">✕</button>
+      
+      <div class="panel-body">
+        <div class="panel-tabs">
+          <button id="tabNavBtn" class="active-tab" onclick="switchTab('nav')">📐 Trajet</button>
+          <button id="tabFuelBtn" onclick="switchTab('fuel')">⛽ Conso</button>
+          <button id="tabWeatherBtn" onclick="switchTab('weather')">🌊 Météo</button>
+          <button id="tabKnotsBtn" onclick="switchTab('knots')">🪢 Nœuds</button>
+        </div>
+
+        <!-- ONGLET TRAJET MULTI-POINTS -->
+        <div id="tabNav" class="tab-content active">
+          <div class="compact-row">
+            <label>Nombre d'étapes</label>
+            <span id="pointsCountVal">0 point</span>
+          </div>
+          <div class="compact-row">
+            <label>Distance Cumulée</label>
+            <span id="distVal">0.0 MN</span>
+          </div>
+          <div class="compact-row">
+            <label>Cap Dernier Segment</label>
+            <span id="headingVal">---°</span>
+          </div>
+          <div class="compact-row">
+            <label>Vitesse Estimée</label>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <input type="number" id="speedInput" value="15" min="1" max="60" onchange="updateRouteCalculations()" style="width:55px; text-align:center;">
+              <span style="font-size:0.8rem; color:#94a3b8;">kt</span>
+            </div>
+          </div>
+          <div class="compact-row">
+            <label>Temps Cumulé</label>
+            <span id="timeVal" style="color:#22c55e;">0 min</span>
+          </div>
+
+          <div class="track-controls">
+            <button onclick="undoLastRoutePoint()" style="background:#eab308; color:#000;">↩️ Annuler dernier</button>
+            <button onclick="clearRoute()" style="background:#dc2626;">🗑️ Effacer trajet</button>
+            <button onclick="exportTrackGPX()" style="background:#16a34a;">💾 Exporter GPX</button>
+          </div>
+        </div>
+
+        <!-- ONGLET CONSO CARBURANT ET SÉCURITÉ 20% -->
+        <div id="tabFuel" class="tab-content">
+          <div class="compact-row">
+            <label>Moteur</label>
+            <select id="hpSelect" onchange="updateFuelCalculations()" style="width:120px;">
+              <option value="50">50 CH</option>
+              <option value="70">70 CH</option>
+              <option value="90">90 CH</option>
+              <option value="115" selected>115 CH</option>
+              <option value="150">150 CH</option>
+              <option value="200">200 CH</option>
+              <option value="250">250 CH</option>
+            </select>
+          </div>
+
+          <div class="compact-row">
+            <label>Régime</label>
+            <select id="rpmSelect" onchange="updateFuelCalculations()" style="width:160px;">
+              <option value="1000">1000 tr (Trolling)</option>
+              <option value="2000">2000 tr (Ralenti)</option>
+              <option value="3000">3000 tr (Déjaugeage)</option>
+              <option value="4000" selected>4000 tr (Croisière)</option>
+              <option value="4500">4500 tr (Rapide)</option>
+              <option value="5000">5000 tr (Soutenu)</option>
+              <option value="5800">5800+ tr (Plein gaz)</option>
+            </select>
+          </div>
+
+          <div class="compact-row">
+            <label>Conso / Rendement</label>
+            <div>
+              <span id="calcLphVal" style="color:#eab308;">0.0 L/h</span>
+              <span style="color:#94a3b8; font-size:0.75rem;"> | </span>
+              <span id="lpnmVal" style="color:#38bdf8;">0.00 L/MN</span>
+            </div>
+          </div>
+
+          <div class="compact-row">
+            <label>Essence Trajet Total</label>
+            <span id="fuelNeededVal" style="color:#38bdf8;">0.0 L</span>
+          </div>
+
+          <!-- AFFICHAGE SÉCURITÉ +20% -->
+          <div class="compact-row safety-highlight">
+            <label style="color:#22c55e; font-weight:bold;">🚨 SÉCURITÉ EMBARQUÉE (+20%)</label>
+            <span id="fuelSafetyVal">0.0 L</span>
+          </div>
+        </div>
+
+        <!-- ONGLET MÉTÉO -->
+        <div id="tabWeather" class="tab-content">
+          <div class="compact-row">
+            <label>Vent Moyen</label>
+            <span id="windVal">Chargement...</span>
+          </div>
+          <div class="compact-row">
+            <label>Houle (Haut. / Période)</label>
+            <span id="waveVal">Chargement...</span>
+          </div>
+        </div>
+
+        <!-- ONGLET NŒUDS DE PÊCHE -->
+        <div id="tabKnots" class="tab-content">
+          
+          <!-- PALOMAR -->
+          <div class="knot-card">
+            <h4 style="color:#16a34a;">
+              <span>🪢 Nœud Palomar</span>
+              <span class="knot-tag tag-terminal">TERMINAL</span>
+            </h4>
+            <object data="./noeuds/noeud-palomar.pdf" type="application/pdf" class="pdf-frame">
+              <p style="padding:10px; font-size:0.75rem; color:#94a3b8;">Aperçu indisponible. Cliquez sur le bouton ci-dessous.</p>
+            </object>
+            <a href="./noeuds/noeud-palomar.pdf" target="_blank" class="pdf-btn">🔍 Ouvrir le Nœud Palomar en Plein Écran</a>
+          </div>
+
+          <!-- PEIXET -->
+          <div class="knot-card">
+            <h4 style="color:#0284c7;">
+              <span>🪢 Nœud Peixet</span>
+              <span class="knot-tag tag-raccord">RACCORD</span>
+            </h4>
+            <object data="./noeuds/noeud-peixet.pdf" type="application/pdf" class="pdf-frame">
+              <p style="padding:10px; font-size:0.75rem; color:#94a3b8;">Aperçu indisponible. Cliquez sur le bouton ci-dessous.</p>
+            </object>
+            <a href="./noeuds/noeud-peixet.pdf" target="_blank" class="pdf-btn">🔍 Ouvrir le Nœud Peixet en Plein Écran</a>
+          </div>
+
+          <!-- TATAKI -->
+          <div class="knot-card">
+            <h4 style="color:#eab308;">
+              <span>🪢 Nœud Tataki (Dropper Loop)</span>
+              <span class="knot-tag tag-potence">POTENCE</span>
+            </h4>
+            <object data="./noeuds/noeud-tataki.pdf" type="application/pdf" class="pdf-frame">
+              <p style="padding:10px; font-size:0.75rem; color:#94a3b8;">Aperçu indisponible. Cliquez sur le bouton ci-dessous.</p>
+            </object>
+            <a href="./noeuds/noeud-tataki.pdf" target="_blank" class="pdf-btn">🔍 Ouvrir le Nœud Tataki en Plein Écran</a>
+          </div>
+
         </div>
       </div>
-      <div class="drawer-content" id="drawer-content"></div>
+    </div>
+
+    <!-- MODALE FULLSCREEN GUIDE TAILLES & QUOTAS -->
+    <div id="quotaModal" class="modal-overlay">
+      <div class="modal-header">
+        <h2>📜 Tailles Légales & Quotas (Atlantique)</h2>
+        <button class="modal-close-btn" onclick="closeQuotaModal()">Fermer ✕</button>
+      </div>
+
+      <p style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">
+        ⚠️ <b>Zone Golfe de Gascogne</b>. Marquage obligatoire (couper le lobe inférieur de la caudale dès la capture).
+      </p>
+
+      <table class="quota-table">
+        <thead>
+          <tr>
+            <th>Espèce</th>
+            <th>Taille Min.</th>
+            <th>Quota / Jour</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Bar commun</b></td>
+            <td><span style="color:#22c55e; font-weight:bold;">42 cm</span></td>
+            <td><span class="tag-quota">2 / pêcheur</span></td>
+          </tr>
+          <tr>
+            <td><b>Lieu jaune</b></td>
+            <td><span style="color:#22c55e; font-weight:bold;">42 cm</span></td>
+            <td><span class="tag-quota">2 / pêcheur</span></td>
+          </tr>
+          <tr>
+            <td><b>Maquereau</b></td>
+            <td><span style="color:#38bdf8;">20 cm</span></td>
+            <td><span class="tag-quota">10 / pêcheur</span></td>
+          </tr>
+          <tr>
+            <td><b>Dorade Royale / Grise</b></td>
+            <td><span style="color:#38bdf8;">23 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Sole</b></td>
+            <td><span style="color:#38bdf8;">24 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Turbot</b></td>
+            <td><span style="color:#38bdf8;">30 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Sar commun</b></td>
+            <td><span style="color:#38bdf8;">25 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Lieu noir</b></td>
+            <td><span style="color:#38bdf8;">35 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Merlan</b></td>
+            <td><span style="color:#38bdf8;">27 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Maigre</b></td>
+            <td><span style="color:#38bdf8;">50 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Merlu</b></td>
+            <td><span style="color:#38bdf8;">27 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Chinchard</b></td>
+            <td><span style="color:#38bdf8;">15 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Congre</b></td>
+            <td><span style="color:#38bdf8;">60 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Rouget barbet</b></td>
+            <td><span style="color:#38bdf8;">15 cm</span></td>
+            <td>Pas de quota spéc.</td>
+          </tr>
+          <tr>
+            <td><b>Chipirons / Seiches</b></td>
+            <td>Pas de taille min.</td>
+            <td>Raisonnable</td>
+          </tr>
+          <tr>
+            <td><b>Bonite à dos rayé</b></td>
+            <td>Pas de taille min. (35cm conseillé)</td>
+            <td>Raisonnable</td>
+          </tr>
+          <tr>
+            <td><b>Thon rouge</b></td>
+            <td><span style="color:#ef4444; font-weight:bold;">115 cm / 30 kg</span></td>
+            <td><span class="tag-quota" style="background:#ef4444; color:#fff;">Bague obligatoire</span></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
   <script>
-    const map = L.map('map', { zoomControl: false }).setView([43.388, -1.663], 12);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW ERREUR:', err));
+    }
 
-    // FLUX SHOM OFFICIEL HÉBERGÉ VIA LA GEOPLATEFORME (SANS BLOCAGE)
-    const layers = {
-      shom: L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=SHOM_RASTER_COTIER_PYR-PNG_WGS84&STYLE=normal&TILEMATRIXSET=GoogleMapsCompatible&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png', { maxZoom: 18, minZoom: 3, attribution: 'SHOM / IGN' }),
-      osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }),
-      sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 })
+    const abris = {
+      sjl: { lat: 43.3881, lng: -1.6667 },
+      hendaye: { lat: 43.3742, lng: -1.7825 },
+      biarritz: { lat: 43.4831, lng: -1.5586 },
+      capbreton: { lat: 43.6558, lng: -1.4461 }
     };
-    layers.shom.addTo(map);
 
-    // MARQUEURS DES SPOTS DE PÊCHE
-    const spots = [
-      { coords: [43.395, -1.680], title: 'Les Briquets (Thon, Lieu, Bar)', icon: '🐟' },
-      { coords: [43.410, -1.670], title: 'Fosse de Socoa (Chipiron, Merlu)', icon: '🦑' },
-      { coords: [43.390, -1.700], title: 'Baie de Loya (Dorade, Sar)', icon: '🐠' },
-      { coords: [43.535, -1.460], title: 'Tête du Gouf (Thon Rouge, Bonite)', icon: '🐟' },
-      { coords: [43.520, -1.480], title: 'Bords du Fosse (Merlu, Lieu)', icon: '🎣' }
-    ];
+    const marineSpots = {
+      socoa_chipirons: { name: "Baie de Socoa / Artha", depth: "-6m à -12m", desc: "Chipirons à la turlutte au coucher du soleil.", lat: 43.3915, lng: -1.6740, type: "chipiron" },
+      barbe_chipirons: { name: "Pointe Sainte-Barbe", depth: "-8m à -14m", desc: "Fonds mixtes idéal seiches et chipirons.", lat: 43.3995, lng: -1.6610, type: "chipiron" },
+      hendaye_chenal: { name: "Chenal Hendaye / Txingudi", depth: "-5m à -10m", desc: "Proximité herbiers à la montante.", lat: 43.3770, lng: -1.7810, type: "chipiron" },
+      capbreton_estacade: { name: "Sortie Port Capbreton", depth: "-8m", desc: "Secteur abrité pour céphalopodes.", lat: 43.6585, lng: -1.4490, type: "chipiron" },
+      cassure_gouf: { name: "Cassure Gouf de Capbreton", depth: "-50m à -100m+", desc: "Chasses de bonites/pélamydes au jig.", lat: 43.6510, lng: -1.5120, type: "bonite" },
+      large_jaizkibel: { name: "Large de Jaizkibel", depth: "-45m à -60m", desc: "Traîne rapide et chasses à 3-5 milles.", lat: 43.3980, lng: -1.8250, type: "bonite" },
+      socoa_large: { name: "Large St-Jean-de-Luz", depth: "-50m", desc: "Passage régulier de bonites.", lat: 43.4250, lng: -1.6750, type: "bonite" },
+      passe_capbreton: { name: "Sortie Passe Capbreton", depth: "-20m à -30m", desc: "Maquereaux à la mitraillette.", lat: 43.6620, lng: -1.4580, type: "maquereau" },
+      large_socoa: { name: "Plateau de Socoa", depth: "-20m à -30m", desc: "Dérives à poissons bleus.", lat: 43.4020, lng: -1.6880, type: "maquereau" },
+      haut_fond_briquets: { name: "Haut-fond des Briquets", depth: "-28m", desc: "Bancs de poissons bleus.", lat: 43.3850, lng: -1.7450, type: "maquereau" },
+      pietro: { name: "Épave Pietro Orseolo", depth: "-35m", desc: "Cargo italien coulé en 1943.", lat: 43.6420, lng: -1.4880, type: "epave" },
+      souvenir: { name: "Épave Le Souvenir", depth: "-18m", desc: "Vapeur coulé en baie de SJL.", lat: 43.3980, lng: -1.6750, type: "epave" },
+      socoa: { name: "Roches Socoa / Belharra", depth: "-15m", desc: "Haut-fond rocheux mythique.", lat: 43.3950, lng: -1.6910, type: "epave" }
+    };
 
-    spots.forEach(spot => {
-      const spotIcon = L.divIcon({
-        className: 'spot-icon',
-        html: `<span style="font-size:22px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));">${spot.icon}</span>`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
-      });
-      L.marker(spot.coords, { icon: spotIcon }).addTo(map).bindPopup(`<b>${spot.title}</b>`);
-    });
+    const iconsByType = { chipiron: "🦑", bonite: "⚡", maquereau: "🐟", epave: "⚓", perso: "🎣" };
 
-    // CHANGER DE CARTE
-    document.getElementById('map-select').addEventListener('change', (e) => {
-      Object.values(layers).forEach(l => map.removeLayer(l));
-      layers[e.target.value].addTo(map);
-    });
+    let map = L.map('map', { center: [abris.sjl.lat, abris.sjl.lng], zoom: 11 });
 
-    // NAVIGATION PAR PORTS ET SPOTS
-    document.getElementById('port-select').addEventListener('change', (e) => {
-      if (e.target.value) {
-        const c = e.target.value.split(',').map(Number);
-        map.setView(c, 14);
+    // FLUX SHOM WMS OFFICIEL (Compatible APK et hors ligne)
+    const shomLayer = L.tileLayer.wms('https://data.geopf.fr/wms-r/wms?', {
+      layers: 'GEOGRAPHICALGRIDSYSTEMS.COASTALMAPS',
+      format: 'image/png',
+      transparent: true,
+      maxZoom: 18,
+      attribution: '© SHOM / IGN'
+    }).addTo(map);
+
+    const osmBase = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
+    const seamarkOverlay = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', { maxZoom: 18 });
+    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 });
+
+    function changeMapLayer(type) {
+      map.removeLayer(shomLayer); map.removeLayer(osmBase); map.removeLayer(seamarkOverlay); map.removeLayer(satLayer);
+      if (type === 'shom') shomLayer.addTo(map);
+      else if (type === 'seamap') { osmBase.addTo(map); seamarkOverlay.addTo(map); }
+      else if (type === 'sat') satLayer.addTo(map);
+    }
+
+    let circle = L.circle([abris.sjl.lat, abris.sjl.lng], { radius: 11112, color: '#eab308', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 2, dashArray: '6, 6' }).addTo(map);
+    let customPointMarker = null;
+    let isCustomPointMode = false;
+
+    function changePort(val) {
+      if (val === 'custom') {
+        isCustomPointMode = true;
+        alert("Cliquez sur la carte pour placer le centre du cercle des 6 milles.");
+        return;
       }
+      isCustomPointMode = false;
+      if (customPointMarker) { map.removeLayer(customPointMarker); customPointMarker = null; }
+      const port = abris[val];
+      if(port) { circle.setLatLng([port.lat, port.lng]); map.panTo([port.lat, port.lng]); }
+    }
+
+    Object.keys(marineSpots).forEach(key => {
+      const sp = marineSpots[key];
+      const symbol = iconsByType[sp.type] || "📍";
+      const spotIcon = L.divIcon({ html: `<div class="spot-custom-icon">${symbol}</div>`, className: 'spot-icon' });
+      L.marker([sp.lat, sp.lng], {icon: spotIcon}).bindPopup(`
+        <b>${symbol} ${sp.name}</b><br>
+        Prof: ${sp.depth}<br>
+        <i>${sp.desc}</i><br>
+        <button class="nav-btn-popup" onclick="setRouteToSpot(${sp.lat}, ${sp.lng})">📐 Naviguer vers ce spot</button>
+      `).addTo(map);
     });
 
-    document.getElementById('spot-select').addEventListener('change', (e) => {
-      if (e.target.value) {
-        const c = e.target.value.split(',').map(Number);
-        map.setView(c, 14);
-      }
-    });
-
-    // ICONE BATEAU POUR LE GPS
-    const boatIcon = L.divIcon({
-      className: 'boat-icon',
-      html: '⛵',
-      iconSize: [30, 30],
-      iconAnchor: [15, 15]
-    });
-
-    // COMPAS
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', (e) => {
-        let alpha = e.alpha || 0;
-        if (e.webkitCompassHeading) alpha = e.webkitCompassHeading;
-        document.getElementById('compass-dial').style.transform = `rotate(${-alpha}deg)`;
-        document.getElementById('compass-val').innerText = `${Math.round(alpha)}° (Mag)`;
-      });
+    function selectSpotOfInterest(val) {
+      if(!val || !marineSpots[val]) return;
+      const sp = marineSpots[val];
+      const symbol = iconsByType[sp.type] || "📍";
+      map.setView([sp.lat, sp.lng], 13);
+      L.popup().setLatLng([sp.lat, sp.lng]).setContent(`
+        <b>${symbol} ${sp.name}</b><br>
+        Prof: ${sp.depth}<br>
+        <i>${sp.desc}</i><br>
+        <button class="nav-btn-popup" onclick="setRouteToSpot(${sp.lat}, ${sp.lng})">📐 Naviguer vers ce spot</button>
+      `).openOn(map);
     }
 
-    // PANNEAU RETRACTABLE
-    const drawer = document.getElementById('drawer');
-    const drawerContent = document.getElementById('drawer-content');
-    
-    function openDrawer(tab) {
-      drawer.classList.add('open');
-      renderTab(tab);
-    }
-    document.getElementById('drawer-close-btn').addEventListener('click', () => drawer.classList.remove('open'));
+    /* GESTION MULTI-POINTS */
+    let routeMode = false;
+    let routePoints = [];
+    let routeMarkers = [];
+    let routeLine = null;
+    let totalDistanceNauticalMiles = 0;
 
-    document.getElementById('btn-tab-trajet').addEventListener('click', () => openDrawer('trajet'));
-    document.getElementById('btn-tab-conso').addEventListener('click', () => openDrawer('conso'));
-    document.getElementById('btn-tab-noeuds').addEventListener('click', () => openDrawer('noeuds'));
-    document.getElementById('btn-tab-quotas').addEventListener('click', () => openDrawer('quotas'));
-
-    document.getElementById('tab-btn-trajet').addEventListener('click', () => renderTab('trajet'));
-    document.getElementById('tab-btn-conso').addEventListener('click', () => renderTab('conso'));
-    document.getElementById('tab-btn-meteo').addEventListener('click', () => renderTab('meteo'));
-    document.getElementById('tab-btn-noeuds').addEventListener('click', () => renderTab('noeuds'));
-
-    function renderTab(tab) {
-      if (tab === 'trajet') {
-        drawerContent.innerHTML = `
-          <h3>📐 Calcul de Trajet & Navigation</h3>
-          <p style="margin-top:8px; font-size:0.85rem; color:#94a3b8;">Sélectionnez deux points sur la carte pour mesurer la distance en Milles Nautiques (NM).</p>
-        `;
-      } else if (tab === 'conso') {
-        drawerContent.innerHTML = `
-          <h3>⛽ Calculateur de Consommation Carb.</h3>
-          <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
-            <input type="number" id="conso-lph" placeholder="Conso moyenne (L/h) ex: 15" style="padding:8px;">
-            <input type="number" id="conso-speed" placeholder="Vitesse moyenne (Noeuds) ex: 18" style="padding:8px;">
-            <button onclick="calcConso()">Calculer Conso / NM</button>
-            <div id="conso-res" style="color:#eab308; font-weight:bold; margin-top:6px;"></div>
-          </div>
-        `;
-      } else if (tab === 'meteo') {
-        drawerContent.innerHTML = `
-          <h3>🌊 Météo Marine, Vent & Houle</h3>
-          <div style="margin-top:10px; background:#1e293b; padding:10px; border-radius:8px;">
-            <p id="meteo-wind">Vent Moyen: <span style="color:#38bdf8;">Chargement...</span></p>
-            <p id="meteo-wave" style="margin-top:6px;">Houle (Haut. / Période): <span style="color:#38bdf8;">Chargement...</span></p>
-          </div>
-        `;
-        fetchMeteo();
-      } else if (tab === 'noeuds') {
-        drawerContent.innerHTML = `
-          <h3>🪢 Nœuds Marins Essentiels</h3>
-          <ul style="margin-top:8px; padding-left:18px; font-size:0.88rem; line-height:1.6;">
-            <li><b>Nœud de Chaise :</b> La boucle universelle pour l'amarrage.</li>
-            <li><b>Nœud de Taquet :</b> Sécuriser sur les taquets de pont.</li>
-            <li><b>Nœud de Pendu / Albright :</b> Raccord tressage/fluorocarbone.</li>
-            <li><b>Nœud Palomar :</b> Pour attacher hameçons et émerillons.</li>
-          </ul>
-        `;
-      } else if (tab === 'quotas') {
-        drawerContent.innerHTML = `
-          <h3>📜 Quotas & Réglementation Pêche</h3>
-          <table class="quota-table">
-            <thead>
-              <tr><th>Espèce</th><th>Taille Min.</th><th>Quota / Jour</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Bar / Loup</td><td>42 cm</td><td><span class="tag-quota">2 / Pêcheur</span></td></tr>
-              <tr><td>Thon Rouge</td><td>115 cm / 30 kg</td><td><span class="tag-quota">Bague Obligatoire</span></td></tr>
-              <tr><td>Lieu Jaune</td><td>30 cm</td><td><span class="tag-quota">2 / Pêcheur</span></td></tr>
-              <tr><td>Dorade Royale</td><td>23 cm</td><td>Pas de limite</td></tr>
-            </tbody>
-          </table>
-        `;
-      }
-    }
-
-    function calcConso() {
-      const lph = parseFloat(document.getElementById('conso-lph').value);
-      const spd = parseFloat(document.getElementById('conso-speed').value);
-      if (lph && spd) {
-        document.getElementById('conso-res').innerText = `Consommation : ${(lph / spd).toFixed(2)} L / Mille Nautique`;
-      }
-    }
-
-    function fetchMeteo() {
-      fetch('https://api.open-meteo.com/v1/forecast?latitude=43.388&longitude=-1.663&current_weather=true')
-        .then(res => res.json())
-        .then(data => {
-          if (data.current_weather) {
-            document.getElementById('meteo-wind').innerHTML = `Vent Moyen: <b>${data.current_weather.windspeed} km/h</b> (${data.current_weather.winddirection}°)`;
-            document.getElementById('meteo-wave').innerHTML = `Houle: <b>1.2m / 8s</b> (Secteur Ouest)`;
-          }
-        })
-        .catch(() => {
-          document.getElementById('meteo-wind').innerText = 'Vent Moyen: 12 Noeuds (SO)';
-          document.getElementById('meteo-wave').innerText = 'Houle: 1.1m / 9s';
-        });
-    }
-
-    // BOUTON GPS
-    let watchId = null;
-    let userMarker = null;
-    const btnGps = document.getElementById('btn-gps');
-
-    btnGps.addEventListener('click', () => {
-      if (watchId === null) {
-        btnGps.classList.add('active');
-        btnGps.innerText = "📍 GPS (ON)";
-        watchId = navigator.geolocation.watchPosition((pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          if (!userMarker) {
-            userMarker = L.marker([lat, lng], { icon: boatIcon }).addTo(map).bindPopup('Votre Bateau');
-            map.setView([lat, lng], 13);
-          } else {
-            userMarker.setLatLng([lat, lng]);
-          }
-        }, (err) => {
-          alert("Erreur d'accès au GPS : " + err.message);
-        }, { enableHighAccuracy: true });
+    function toggleRouteMode() {
+      routeMode = !routeMode;
+      const btn = document.getElementById('routeBtn');
+      if(routeMode) {
+        btn.classList.add('active');
+        btn.innerText = "📐 Clic p/ ajouter";
+        showInfoPanel();
       } else {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-        btnGps.classList.remove('active');
-        btnGps.innerText = "📍 GPS (OFF)";
-        if (userMarker) {
-          map.removeLayer(userMarker);
-          userMarker = null;
+        btn.classList.remove('active');
+        btn.innerText = "📐 Trajet";
+      }
+    }
+
+    function addRoutePoint(latLng) {
+      routePoints.push(latLng);
+      const index = routePoints.length;
+      
+      const badgeIcon = L.divIcon({
+        html: `<div class="point-badge">${index}</div>`,
+        className: 'route-badge'
+      });
+
+      const marker = L.marker(latLng, { icon: badgeIcon }).addTo(map);
+      routeMarkers.push(marker);
+
+      if (routePoints.length >= 2) {
+        if (!routeLine) {
+          routeLine = L.polyline(routePoints, { color: '#0284c7', weight: 4, dashArray: '6, 6' }).addTo(map);
+        } else {
+          routeLine.setLatLngs(routePoints);
         }
       }
+
+      updateRouteCalculations();
+    }
+
+    function undoLastRoutePoint() {
+      if (routePoints.length === 0) return;
+      
+      routePoints.pop();
+      const lastMarker = routeMarkers.pop();
+      if (lastMarker) map.removeLayer(lastMarker);
+
+      if (routePoints.length < 2) {
+        if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+      } else if (routeLine) {
+        routeLine.setLatLngs(routePoints);
+      }
+
+      updateRouteCalculations();
+    }
+
+    function clearRoute() {
+      routePoints = [];
+      routeMarkers.forEach(m => map.removeLayer(m));
+      routeMarkers = [];
+      if (routeLine) map.removeLayer(routeLine);
+      routeLine = null;
+      totalDistanceNauticalMiles = 0;
+      updateRouteCalculations();
+    }
+
+    function calculateBearing(lat1, lon1, lat2, lon2) {
+      const toRad = x => x * Math.PI / 180;
+      const toDeg = x => x * 180 / Math.PI;
+      const dLon = toRad(lon2 - lon1);
+      const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+      const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) - Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+      let brng = toDeg(Math.atan2(y, x));
+      return (brng + 360) % 360;
+    }
+
+    function updateRouteCalculations() {
+      document.getElementById('pointsCountVal').innerText = `${routePoints.length} point${routePoints.length > 1 ? 's' : ''}`;
+
+      if (routePoints.length < 2) {
+        document.getElementById('distVal').innerText = "0.0 MN";
+        document.getElementById('headingVal').innerText = "---°";
+        document.getElementById('timeVal').innerText = "0 min";
+        totalDistanceNauticalMiles = 0;
+        updateFuelCalculations();
+        return;
+      }
+
+      let distMeters = 0;
+      for (let i = 0; i < routePoints.length - 1; i++) {
+        distMeters += map.distance(routePoints[i], routePoints[i + 1]);
+      }
+
+      totalDistanceNauticalMiles = distMeters / 1852;
+      
+      const lastIdx = routePoints.length - 1;
+      const bearing = calculateBearing(
+        routePoints[lastIdx - 1].lat, routePoints[lastIdx - 1].lng,
+        routePoints[lastIdx].lat, routePoints[lastIdx].lng
+      );
+      
+      const speed = parseFloat(document.getElementById('speedInput').value) || 15;
+      const hours = totalDistanceNauticalMiles / speed;
+      const totalMinutes = Math.round(hours * 60);
+
+      let timeFormatted = "";
+      if (totalMinutes >= 60) {
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        timeFormatted = `${h}h ${m}m`;
+      } else {
+        timeFormatted = `${totalMinutes} min`;
+      }
+
+      document.getElementById('distVal').innerText = `${totalDistanceNauticalMiles.toFixed(2)} MN`;
+      document.getElementById('headingVal').innerText = `${Math.round(bearing)}°`;
+      document.getElementById('timeVal').innerText = timeFormatted;
+
+      updateFuelCalculations();
+    }
+
+    /* FORMULE CARBURANT CORRIGÉE */
+    function updateFuelCalculations() {
+      const hp = parseFloat(document.getElementById('hpSelect').value) || 115;
+      const rpm = parseFloat(document.getElementById('rpmSelect').value) || 4000;
+      const speed = parseFloat(document.getElementById('speedInput').value) || 15;
+
+      let fuelRatio = 0.015;
+      if (rpm >= 5800) fuelRatio = 0.32;
+      else if (rpm >= 5000) fuelRatio = 0.27;
+      else if (rpm >= 4500) fuelRatio = 0.23;
+      else if (rpm >= 4000) fuelRatio = 0.18;
+      else if (rpm >= 3000) fuelRatio = 0.11;
+      else if (rpm >= 2000) fuelRatio = 0.04;
+
+      const litersPerHour = hp * fuelRatio;
+      const litersPerNauticalMile = speed > 0 ? (litersPerHour / speed) : 0;
+
+      const hours = totalDistanceNauticalMiles / speed;
+      const litersNeeded = hours * litersPerHour;
+      const litersSafety = litersNeeded * 1.20;
+
+      document.getElementById('calcLphVal').innerText = `${litersPerHour.toFixed(1)} L/h`;
+      document.getElementById('lpnmVal').innerText = `${litersPerNauticalMile.toFixed(2)} L/MN`;
+      document.getElementById('fuelNeededVal').innerText = `${litersNeeded.toFixed(1)} L`;
+      document.getElementById('fuelSafetyVal').innerText = `${litersSafety.toFixed(1)} L`;
+    }
+
+    /* RECUPERATION METEO */
+    async function fetchWeatherData() {
+      const windEl = document.getElementById('windVal');
+      const waveEl = document.getElementById('waveVal');
+      
+      if (windEl) windEl.innerText = "Chargement...";
+      if (waveEl) waveEl.innerText = "Chargement...";
+
+      try {
+        const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=43.388&longitude=-1.666&current=wave_height,wave_period&cell_selection=sea`;
+        const resMarine = await fetch(marineUrl);
+        const dataMarine = await resMarine.json();
+
+        if (dataMarine && dataMarine.current) {
+          const wave = dataMarine.current.wave_height !== undefined ? dataMarine.current.wave_height : "--";
+          const period = dataMarine.current.wave_period !== undefined ? dataMarine.current.wave_period : "--";
+          if (waveEl) waveEl.innerText = `${wave} m / ${period}s`;
+        } else {
+          if (waveEl) waveEl.innerText = "-- m / --s";
+        }
+
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=43.388&longitude=-1.666&current=wind_speed_10m&wind_speed_unit=kn`;
+        const resWeather = await fetch(weatherUrl);
+        const dataWeather = await resWeather.json();
+
+        if (dataWeather && dataWeather.current) {
+          const windKts = Math.round(dataWeather.current.wind_speed_10m);
+          if (windEl) windEl.innerText = `${windKts} kt`;
+        } else {
+          if (windEl) windEl.innerText = "-- kt";
+        }
+      } catch (e) {
+        console.error("Erreur météo / Hors ligne:", e);
+        if (windEl) windEl.innerText = "Mode Hors Ligne";
+        if (waveEl) waveEl.innerText = "Mode Hors Ligne";
+      }
+    }
+
+    function setRouteToSpot(targetLat, targetLng) {
+      if (routePoints.length === 0) {
+        let startPoint = circle.getLatLng();
+        if (boatMarker) startPoint = boatMarker.getLatLng();
+        addRoutePoint(startPoint);
+      }
+      addRoutePoint(L.latLng(targetLat, targetLng));
+      showInfoPanel();
+    }
+
+    map.on('click', function(e) {
+      if (isCustomPointMode) {
+        circle.setLatLng([e.latlng.lat, e.latlng.lng]);
+        if (!customPointMarker) {
+          customPointMarker = L.marker([e.latlng.lat, e.latlng.lng], {
+            icon: L.divIcon({ html: `<div style="font-size:24px;">📍</div>`, className: 'custom-anchor' })
+          }).addTo(map).bindPopup("<b>Point de référence 6M</b>");
+        } else {
+          customPointMarker.setLatLng([e.latlng.lat, e.latlng.lng]);
+        }
+        isCustomPointMode = false;
+        return;
+      }
+
+      if (routeMode) {
+        addRoutePoint(e.latlng);
+        return;
+      }
     });
+
+    function showInfoPanel() { document.getElementById('infoPanel').style.display = 'flex'; }
+    function hideInfoPanel() { document.getElementById('infoPanel').style.display = 'none'; }
+    
+    function toggleFuelPanel() { showInfoPanel(); switchTab('fuel'); }
+    function toggleWeatherPanel() { showInfoPanel(); switchTab('weather'); fetchWeatherData(); }
+    function toggleKnotsPanel() { 
+      showInfoPanel(); 
+      switchTab('knots'); 
+      document.getElementById('infoPanel').style.height = '480px';
+    }
+
+    function openQuotaModal() { document.getElementById('quotaModal').style.display = 'block'; }
+    function closeQuotaModal() { document.getElementById('quotaModal').style.display = 'none'; }
+
+    function switchTab(tab) {
+      document.getElementById('tabNav').classList.remove('active');
+      document.getElementById('tabFuel').classList.remove('active');
+      document.getElementById('tabWeather').classList.remove('active');
+      document.getElementById('tabKnots').classList.remove('active');
+
+      document.getElementById('tabNavBtn').classList.remove('active-tab');
+      document.getElementById('tabFuelBtn').classList.remove('active-tab');
+      document.getElementById('tabWeatherBtn').classList.remove('active-tab');
+      document.getElementById('tabKnotsBtn').classList.remove('active-tab');
+
+      if (tab === 'nav') {
+        document.getElementById('tabNav').classList.add('active');
+        document.getElementById('tabNavBtn').classList.add('active-tab');
+      } else if (tab === 'fuel') {
+        document.getElementById('tabFuel').classList.add('active');
+        document.getElementById('tabFuelBtn').classList.add('active-tab');
+      } else if (tab === 'weather') {
+        document.getElementById('tabWeather').classList.add('active');
+        document.getElementById('tabWeatherBtn').classList.add('active-tab');
+      } else if (tab === 'knots') {
+        document.getElementById('tabKnots').classList.add('active');
+        document.getElementById('tabKnotsBtn').classList.add('active-tab');
+      }
+    }
+
+    function adjustCompassPosition() {
+      const topBarHeight = document.getElementById('topBar').offsetHeight;
+      document.getElementById('compassWidget').style.top = (topBarHeight + 10) + 'px';
+    }
+
+    /* GLISSER / ÉTIRER PANNEAU */
+    const panel = document.getElementById('infoPanel');
+    const handle = document.getElementById('dragHandle');
+    let startY = 0;
+    let startHeight = 0;
+    let isDragging = false;
+
+    function onDragStart(e) {
+      isDragging = true;
+      startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startHeight = panel.offsetHeight;
+      document.addEventListener('mousemove', onDragMove);
+      document.addEventListener('mouseup', onDragEnd);
+      document.addEventListener('touchmove', onDragMove, { passive: false });
+      document.addEventListener('touchend', onDragEnd);
+    }
+
+    function onDragMove(e) {
+      if (!isDragging) return;
+      const currentY = e.touches ? e.touches[0].clientY : e.clientY;
+      const deltaY = startY - currentY;
+      const newHeight = startHeight + deltaY;
+      if (newHeight >= 150 && newHeight <= window.innerHeight * 0.85) {
+        panel.style.height = newHeight + 'px';
+      }
+      if (e.cancelable) e.preventDefault();
+    }
+
+    function onDragEnd() {
+      isDragging = false;
+      document.removeEventListener('mousemove', onDragMove);
+      document.removeEventListener('mouseup', onDragEnd);
+      document.removeEventListener('touchmove', onDragMove);
+      document.removeEventListener('touchend', onDragEnd);
+    }
+
+    handle.addEventListener('mousedown', onDragStart);
+    handle.addEventListener('touchstart', onDragStart, { passive: false });
+
+    /* BOUSSOLE & GPS */
+    let boatMarker = null;
+    let watchId = null;
+    let trackLogPoints = [];
+    let trackLine = null;
+    let previousPos = null;
+    let currentSpeedKnots = 0;
+
+    function initPhoneCompass() {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(response => {
+            if (response === 'granted') {
+              window.addEventListener('deviceorientation', handleOrientation, true);
+            }
+          })
+          .catch(console.error);
+      } else if ('ondeviceorientationabsolute' in window) {
+        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+      } else if ('ondeviceorientation' in window) {
+        window.addEventListener('deviceorientation', handleOrientation, true);
+      }
+    }
+
+    function handleOrientation(event) {
+      if (currentSpeedKnots < 1.5) {
+        let heading = null;
+        if (event.webkitCompassHeading) {
+          heading = event.webkitCompassHeading;
+        } else if (event.alpha !== null) {
+          heading = 360 - event.alpha;
+        }
+        if (heading !== null && !isNaN(heading)) {
+          document.getElementById('compassDial').style.transform = `rotate(${-heading}deg)`;
+          document.getElementById('compassVal').innerText = `${Math.round(heading)}° (Mag)`;
+        }
+      }
+    }
+
+    const boatIcon = L.divIcon({ html: `<div class="boat-icon">🚤</div>`, className: 'boat-marker', iconSize: [30, 30], iconAnchor: [15, 15] });
+
+    function toggleGPS() {
+      const btn = document.getElementById('gpsBtn');
+      
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        if (boatMarker) map.removeLayer(boatMarker);
+        btn.innerText = "🛰️ Mon GPS";
+        btn.style.background = "#0284c7";
+      } else {
+        if (!navigator.geolocation) return alert("GPS non supporté");
+        
+        btn.innerText = "🛰️ Rech. GPS...";
+        adjustCompassPosition();
+        initPhoneCompass();
+        
+        watchId = navigator.geolocation.watchPosition(
+          pos => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const currentLatLng = L.latLng(lat, lng);
+            
+            btn.innerText = "🛰️ GPS (ON)";
+            btn.style.background = "#16a34a";
+
+            if (pos.coords.speed !== null && !isNaN(pos.coords.speed)) {
+              currentSpeedKnots = pos.coords.speed * 1.94384;
+            } else {
+              currentSpeedKnots = 0;
+            }
+
+            if (!boatMarker) {
+              boatMarker = L.marker([lat, lng], { icon: boatIcon }).addTo(map).bindPopup("<b>Mon Bateau</b>");
+              map.setView([lat, lng], 13);
+            } else {
+              boatMarker.setLatLng([lat, lng]);
+            }
+
+            trackLogPoints.push(currentLatLng);
+            if (!trackLine) {
+              trackLine = L.polyline(trackLogPoints, { color: '#22c55e', weight: 4, opacity: 0.8 }).addTo(map);
+            } else {
+              trackLine.setLatLngs(trackLogPoints);
+            }
+
+            if (currentSpeedKnots >= 1.5) {
+              let heading = pos.coords.heading;
+              if ((heading === null || isNaN(heading)) && previousPos) {
+                heading = calculateBearing(previousPos.lat, previousPos.lng, lat, lng);
+              }
+              if (heading !== null && !isNaN(heading)) {
+                document.getElementById('compassDial').style.transform = `rotate(${-heading}deg)`;
+                document.getElementById('compassVal').innerText = `${Math.round(heading)}° (GPS)`;
+              }
+            }
+
+            previousPos = { lat, lng };
+          },
+          err => {
+            alert("Erreur GPS : vérifiez l'accès à la localisation.");
+            btn.innerText = "🛰️ Mon GPS";
+            btn.style.background = "#0284c7";
+          },
+          { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+        );
+      }
+    }
+
+    function exportTrackGPX() {
+      if (trackLogPoints.length < 2 && routePoints.length < 2) return alert("Aucun tracé ou itinéraire enregistré à exporter.");
+      
+      const pointsToExport = routePoints.length >= 2 ? routePoints : trackLogPoints;
+      let gpxContent = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="6milles App by Manu">\n  <trk>\n    <name>Sortie Peche 6milles</name>\n    <trkseg>\n`;
+      
+      pointsToExport.forEach(pt => {
+        gpxContent += `      <trkpt lat="${pt.lat}" lon="${pt.lng}"></trkpt>\n`;
+      });
+      
+      gpxContent += `    </trkseg>\n  </trk>\n</gpx>`;
+
+      const blob = new Blob([gpxContent], { type: "application/gpx+xml" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `itineraire_peche_${new Date().toISOString().slice(0,10)}.gpx`;
+      link.click();
+    }
+
+    window.addEventListener('resize', adjustCompassPosition);
+    adjustCompassPosition();
+    setTimeout(() => { map.invalidateSize(); }, 300);
   </script>
 </body>
 </html>
